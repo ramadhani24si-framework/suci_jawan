@@ -3,12 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Carbon\Carbon; 
+
 class PegawaiController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $name = 'Suci Ramadhani';
@@ -18,20 +15,26 @@ class PegawaiController extends Controller
         $current_semester = 8;
         $future_goal = 'Menjadi Software Engineer Handal';
 
-        $birthDate = Carbon::parse($tanggal_lahir);
-        $my_age = $birthDate->age;
+        // Hitung umur tanpa Carbon
+        $birthDate = new \DateTime($tanggal_lahir);
+        $today = new \DateTime();
+        $ageInterval = $birthDate->diff($today);
+        $my_age = $ageInterval->y;
 
-        $today = Carbon::today();
-        $graduationDate = Carbon::parse($tgl_harus_wisuda);
-        $time_to_study_left = $today->diffInDays($graduationDate, false);
+        // Hitung sisa hari sampai wisuda tanpa Carbon
+        $graduationDate = new \DateTime($tgl_harus_wisuda);
+        $diffInterval = $today->diff($graduationDate);
+        // diff->days selalu positif, kita cek apakah wisuda sudah lewat atau belum dengan invert
+        $time_to_study_left = $diffInterval->invert ? -$diffInterval->days : $diffInterval->days;
 
+        // Pesan sesuai semester
         if ($current_semester < 3) {
             $message = "Masih Awal, Kejar TAK";
         } else {
             $message = "Jangan main-main, kurang-kurangi main game!";
         }
 
-        $data = [
+        return view('pegawai.index', [
             'name' => $name,
             'my_age' => $my_age,
             'hobbies' => $hobbies,
@@ -40,56 +43,6 @@ class PegawaiController extends Controller
             'current_semester' => $current_semester,
             'message' => $message,
             'future_goal' => $future_goal,
-        ];
-
-        return view('pegawai.index', $data);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        ]);
     }
 }
