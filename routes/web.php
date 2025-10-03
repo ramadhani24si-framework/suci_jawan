@@ -25,4 +25,4 @@ Route::get('/about', function () {
 });
 Route::get('/home', [HomeController::class, 'index']);
 
-Route::get('/pegawai.index', [PegawaiController::class, 'index']);
+Route::get('/pegawai', [PegawaiController::class, 'index']);
