@@ -1,15 +1,17 @@
 <?php
-
 namespace App\Models;
+
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class Pelanggan extends Model
 {
-    protected $table  = 'pelanggan';
-    protected $primaryKey  = 'pelanggan_id';
-    protected $fillable = [
+    protected $table      = 'pelanggan';
+    protected $primaryKey = 'pelanggan_id';
+    protected $fillable   = [
         'first_name',
         'last_name',
         'birthday',
@@ -17,6 +19,8 @@ class Pelanggan extends Model
         'email',
         'phone',
     ];
+
+
     public function scopeFilter(Builder $query, $request, array $filterableColumns): Builder
     {
         foreach ($filterableColumns as $column) {
@@ -26,6 +30,8 @@ class Pelanggan extends Model
         }
         return $query;
     }
+
+
     public function scopeSearch($query, $request, array $columns)
     {
         if ($request->filled('search')) {
@@ -36,4 +42,22 @@ class Pelanggan extends Model
             });
         }
     }
+
+
+    // ✅ PERBAIKI: Tambah use statement atau gunakan namespace lengkap
+    public function files(): HasMany
+    {
+        return $this->hasMany(\App\Models\MultipleUpload::class, 'ref_id')
+                    ->where('ref_table', 'pelanggan');
+    }
+
+
+    // METHOD UNTUK FULL NAME
+    public function getFullNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
 }
+
+
+

@@ -120,20 +120,19 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                            <div class="mt-3">
+                            {{ $dataUser->links('pagination::bootstrap-5') }}
                         </div>
 
 
-                        {{-- Pagination --}}
-                        @if($dataUser->hasPages())
-                            <div class="mt-4">
-                                {{ $dataUser->links() }}
-                            </div>
-                        @endif
+
+
                     </div>
                 </div>
             </div>
         </div>
         {{-- end main content --}}
 @endsection
+
 
 
