@@ -1,11 +1,9 @@
 <?php
 namespace App\Http\Controllers;
-
-
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage; // ✅ TAMBAH INI
+use Illuminate\Support\Facades\Storage;
 
 
 class UserController extends Controller
@@ -15,7 +13,7 @@ class UserController extends Controller
      */
     public function index()
     {
-        $dataUser = User::orderBy('created_at', 'desc')->paginate(2);
+        $dataUser = User::orderBy('created_at', 'desc')->paginate(10);
         return view('admin.user.index', compact('dataUser'));
     }
 
@@ -30,50 +28,45 @@ class UserController extends Controller
 
 
     /**
-     * Store a newly created resource in storage.
+     * Simpan user baru
      */
     public function store(Request $request)
     {
-        // ✅ UPDATE VALIDASI
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|min:8|confirmed',
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'password' => 'required|min:6',
+            'role' => 'required|in:Super Admin,Administrator,Pelanggan,Mitra', // ✅ TAMBAH VALIDASI ROLE
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
 
-        $data = $request->only(['name', 'email']);
-        $data['password'] = Hash::make($request->password);
+        // Cara Manual (Lebih aman memastikan data masuk)
+        $user = new User();
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->password = Hash::make($request->password);
+        $user->role = $request->role; // ✅ TAMBAH ROLE
 
 
-        // ✅ HANDLE PROFILE PICTURE UPLOAD
+        // Upload foto jika ada
         if ($request->hasFile('profile_picture')) {
-            $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
-            $data['profile_picture'] = $profilePicturePath;
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
+            $user->profile_picture = $path;
         }
 
 
-        User::create($data);
+        $user->save(); // Simpan ke database
 
 
-        return redirect()->route('user.index')->with('success', 'Penambahan Data Berhasil!');
+        return redirect()->route('user.index')->with('success', 'User berhasil ditambahkan');
     }
 
 
     /**
-     * Display the specified resource.
+     * Form edit data user
      */
-    public function show(string $id)
-    {
-        //
-    }
-
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function edit($id)
     {
         $user = User::findOrFail($id);
         return view('admin.user.edit', compact('user'));
@@ -81,60 +74,61 @@ class UserController extends Controller
 
 
     /**
-     * Update the specified resource in storage.
+     * Update data user
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
         $user = User::findOrFail($id);
 
 
-        // ✅ UPDATE VALIDASI
-        $data = $request->validate([
+        $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
-            'password' => 'nullable|min:8|confirmed',
-            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'password' => 'nullable|min:6', // Password boleh kosong saat edit
+            'role' => 'required|in:Super Admin,Administrator,Pelanggan,Mitra', // ✅ TAMBAH VALIDASI ROLE
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
 
-        // Jika password diisi, update password
-        if ($request->password) {
-            $data['password'] = Hash::make($request->password);
-        } else {
-            // Hapus password dari data jika tidak diisi
-            unset($data['password']);
+        // 1. Update data dasar
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->role = $request->role; // ✅ TAMBAH UPDATE ROLE
+
+
+        // 2. Cek apakah password diisi? Kalau ya, update. Kalau tidak, biarkan lama.
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
         }
 
 
-        // ✅ HANDLE PROFILE PICTURE UPDATE
+        // 3. Logika Upload Foto
         if ($request->hasFile('profile_picture')) {
-            // Delete old picture if exists
+            // Hapus foto lama jika ada & filenya eksis di storage
             if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
                 Storage::disk('public')->delete($user->profile_picture);
             }
+            // Simpan foto baru
+            $path = $request->file('profile_picture')->store('profile_pictures', 'public');
 
 
-            $profilePicturePath = $request->file('profile_picture')->store('profile_pictures', 'public');
-            $data['profile_picture'] = $profilePicturePath;
+            // Set path baru ke database
+            $user->profile_picture = $path;
         }
-
-
-        $user->update($data);
-
-
-        return redirect()->route('user.index')->with('success', 'User berhasil diupdate!');
+        $user->save(); // <--- PENTING: Method save() ini memaksa penyimpanan
+        return redirect()->route('user.index')->with('success', 'User berhasil diperbarui');
     }
 
 
     /**
-     * Remove the specified resource from storage.
+     * Hapus user
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
         $user = User::findOrFail($id);
 
 
-        // ✅ DELETE PROFILE PICTURE IF EXISTS
+        // Hapus file foto jika ada
         if ($user->profile_picture && Storage::disk('public')->exists($user->profile_picture)) {
             Storage::disk('public')->delete($user->profile_picture);
         }
@@ -143,8 +137,9 @@ class UserController extends Controller
         $user->delete();
 
 
-        return redirect()->route('user.index')->with('success', 'Data berhasil dihapus!');
+        return redirect()->route('user.index')->with('success', 'User berhasil dihapus');
     }
 }
+
 
 

@@ -59,6 +59,8 @@
                         @endif
 
 
+
+
                         {{-- Debug Info --}}
                         <div class="alert alert-info d-none">
                             <strong>Debug Info:</strong><br>
@@ -93,6 +95,21 @@
                                     </div>
 
 
+                                    <!-- ROLE - TAMBAHAN BARU -->
+                                    <div class="mb-3">
+                                        <label for="role" class="form-label">Role</label>
+                                        <select name="role" id="role" class="form-select" required>
+                                            <option value="Super Admin" {{ $user->role == 'Super Admin' ? 'selected' : '' }}>Super Admin</option>
+                                            <option value="Administrator" {{ $user->role == 'Administrator' ? 'selected' : '' }}>Administrator</option>
+                                            <option value="Pelanggan" {{ $user->role == 'Pelanggan' ? 'selected' : '' }}>Pelanggan</option>
+                                            <option value="Mitra" {{ $user->role == 'Mitra' ? 'selected' : '' }}>Mitra</option>
+                                        </select>
+                                        @error('role')
+                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-sm-12">
                                     <!-- Profile Picture -->
                                     <div class="mb-3">
                                         <label for="profile_picture" class="form-label">Profile Picture</label>
@@ -132,10 +149,8 @@
                                             </div>
                                         @endif
                                     </div>
-                                </div>
 
 
-                                <div class="col-lg-6 col-sm-12">
                                     <!-- Password -->
                                     <div class="mb-3">
                                         <label for="password" class="form-label">Password Baru</label>
@@ -153,8 +168,6 @@
                                         <input type="password" name="password_confirmation" class="form-control" placeholder="Ulangi password baru">
                                         <small class="text-muted">Harus sama dengan password baru</small>
                                     </div>
-
-
                                     <!-- Buttons -->
                                     <div class="mt-4">
                                         <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
@@ -168,5 +181,6 @@
             </div>
         </div>
 @endsection
+
 
 
